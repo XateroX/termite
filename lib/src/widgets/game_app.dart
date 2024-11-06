@@ -20,6 +20,8 @@ class _GameAppState extends State<GameApp> {
 
   @override
   Widget build(BuildContext context) {
-    return const Placeholder();   
+    return GameWidget(
+      game: game,
+    );   
   }
 }
