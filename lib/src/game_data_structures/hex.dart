@@ -11,13 +11,20 @@ class Hex {
   List<Hex> neighbors() {
     // get all adjacent tiles in parentHexGrid and return them
     List<Hex?> adjacentTiles = [];
+
     adjacentTiles.add(parentHexGrid.getTile(q + 1, r));
     adjacentTiles.add(parentHexGrid.getTile(q - 1, r));
-    adjacentTiles.add(parentHexGrid.getTile(q - 1, r - 1));
-    adjacentTiles.add(parentHexGrid.getTile(q - 1, r + 1));
-    adjacentTiles.add(parentHexGrid.getTile(q, r + 1));
-    adjacentTiles.add(parentHexGrid.getTile(q, r - 1));
-
+    if ((q%2==0 && r%2!=0) || (q%2!=0 && r%2!=0)){
+      adjacentTiles.add(parentHexGrid.getTile(q + 1, r - 1));
+      adjacentTiles.add(parentHexGrid.getTile(q + 1, r + 1));
+      adjacentTiles.add(parentHexGrid.getTile(q, r + 1));
+      adjacentTiles.add(parentHexGrid.getTile(q, r - 1));
+    }else if ((q%2==0 && r%2==0) || (q%2!=0 && r%2==0)){
+      adjacentTiles.add(parentHexGrid.getTile(q, r - 1));
+      adjacentTiles.add(parentHexGrid.getTile(q, r + 1));
+      adjacentTiles.add(parentHexGrid.getTile(q - 1, r + 1));
+      adjacentTiles.add(parentHexGrid.getTile(q - 1, r - 1));
+    }
     return adjacentTiles.whereType<Hex>().toList();
   }
 

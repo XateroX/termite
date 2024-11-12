@@ -30,7 +30,7 @@ class TermiteGame extends FlameGame
 
   double get width => size.x;
   double get height => size.y;
-  HexGrid hexGrid = HexGrid(25, 25);
+  late HexGrid hexGrid;
   List<Entity> entities = [];
   late Queen? queen;
   Rect? previousVisibleRect;
@@ -57,6 +57,7 @@ class TermiteGame extends FlameGame
   FutureOr<void> onLoad() async {
     super.onLoad();
 
+    hexGrid = HexGrid(this, 25, 25);
     camera.viewfinder.anchor = Anchor.topLeft;
     // Initialize the debug text component
     // debugText = TextComponent(
@@ -72,7 +73,7 @@ class TermiteGame extends FlameGame
     // add(debugText);
     // debugMode = true;
 
-    Hex queenhex = hexGrid.getRandomHex();
+    Hex queenhex = hexGrid.getTile(1, 1); //getRandomHex();
 
     // make new queen
     queen = Queen(this, queenhex);
@@ -131,7 +132,7 @@ class TermiteGame extends FlameGame
     }
 
     // Generate new hexes if there are empty spaces
-    generateNewHexes(extendedRect);
+    hexGrid.generateNewHexes(extendedRect);
 
     // Add entities that are now visible
     for (Entity entity in entities) {
@@ -160,38 +161,7 @@ class TermiteGame extends FlameGame
     }
   }
 
-  void generateNewHexes(Rect extendedRect) {
-    // Define the range of q and r values to check
-    final int minQ = (extendedRect.left / (hexTileSize/2)).floor();
-    final int maxQ = (extendedRect.right / (hexTileSize/2)).ceil();
-    final int minR = (extendedRect.top / ((3 / 4) * hexTileSize)).floor();
-    final int maxR = (extendedRect.bottom / ((3 / 4) * hexTileSize)).ceil();
-
-    for (int q = minQ; q <= maxQ; q++) {
-      for (int r = minR; r <= maxR; r++) {
-        if (!hexGrid.grid.any((hex) => hex.q == q && hex.r == r)) {
-          // Generate a new hex and add it to the grid
-          final newHex = Hex(hexGrid, q, r);
-          hexGrid.grid.add(newHex);
-
-          // Add the new hex to the visible tiles if it overlaps with the extendedRect
-          Vector2 position = calculateHexCenterPosition(q, r);
-          final tileRect = Rect.fromLTWH(
-            position.x,
-            position.y,
-            hexTileSize,
-            hexTileSize,
-          );
-
-          if (extendedRect.overlaps(tileRect)) {
-            final tile = HexTile(newHex);
-            world.add(tile);
-            visibleTiles.add(tile);
-          }
-        }
-      }
-    }
-  }
+  
 
   void addEntity(Entity entity) {
     entities.add(entity);

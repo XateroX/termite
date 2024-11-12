@@ -14,18 +14,36 @@ import 'package:termite/src/termite_game.dart';
 
 import 'termite.dart';
 
-class QueenComponent extends CircleComponent with HasGameReference<TermiteGame>{
+class QueenComponent extends PositionComponent with HasGameReference<TermiteGame>{
   Queen queen;
   QueenComponent({
     required this.queen,
-    required super.position
-    }) : super(
-            radius: hexTileSize/3,
-            anchor: Anchor.center,
-            paint: Paint()
-              ..color = const Color(0xff1e6091)
-              ..style = PaintingStyle.fill,
-            children: [CircleHitbox()]);
+    required Vector2 position
+    }) : super(position: position);
+
+  @override
+  Future<void> onLoad() async {
+    super.onLoad();
+    // Load textures, add children components, etc.
+  }
+
+  @override
+  void render(Canvas canvas) {
+    super.render(canvas);
+    // Draw textures, canvas lines, etc.
+    final paint = Paint()
+      ..color = const Color(0xff1e6091)
+      ..style = PaintingStyle.fill;
+    canvas.drawCircle(Offset.zero, hexTileSize / 3, paint);
+    // Add more custom rendering here
+  }
+
+  @override
+  void update(double dt) {
+    // based on frame rate
+    super.update(dt);
+    // Handle animations, moving parts, etc.
+  }
 
   static QueenComponent fromTermiteEntity(Queen entity){
     return QueenComponent(queen: entity, position: entity.position);
