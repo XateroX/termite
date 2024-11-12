@@ -14,7 +14,7 @@ import 'package:termite/src/termite_game.dart';
 
 import 'termite.dart';
 
-class QueenComponent extends CircleComponent {
+class QueenComponent extends CircleComponent with HasGameReference<TermiteGame>{
   Queen queen;
   QueenComponent({
     required this.queen,

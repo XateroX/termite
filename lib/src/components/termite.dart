@@ -6,8 +6,9 @@ import 'package:termite/src/abstract_clases/Entity.dart';
 import 'package:termite/src/config.dart';
 import 'package:termite/src/game_data_structures/hex.dart';
 import 'package:termite/src/game_data_structures/termite.dart';
+import 'package:termite/src/termite_game.dart';
 
-class TermiteComponent extends CircleComponent {
+class TermiteComponent extends CircleComponent with HasGameReference<TermiteGame> {
   Termite termite; 
   TermiteComponent({
     required this.termite,

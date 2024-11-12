@@ -4,13 +4,14 @@ import 'package:flutter/material.dart';
 import 'package:termite/src/abstract_clases/Entity.dart';
 import 'package:termite/src/game_data_structures/hex_grid.dart';
 import 'package:termite/src/game_data_structures/termite.dart';
+import 'package:termite/src/termite_game.dart';
 import 'package:termite/src/utils/calculations.dart';
 
 import '../game_data_structures/hex.dart';
 
 import '../config.dart';
 
-class HexTile extends PositionComponent {
+class HexTile extends PositionComponent with HasGameReference<TermiteGame>{
   List<Entity> entityList = [];
   late final int q;
   late final int r;
@@ -43,5 +44,17 @@ class HexTile extends PositionComponent {
       ..style = PaintingStyle.stroke
       ..strokeWidth = 2.0;
     canvas.drawPath(path, outlinePaint);
+
+    if (game.debug) {
+      final textPainter = TextPainter(
+        text: TextSpan(
+          text: 'q: $q, r: $r',
+          style: TextStyle(color: Colors.red, fontSize: 12),
+        ),
+        textDirection: TextDirection.ltr,
+      );
+      textPainter.layout();
+      textPainter.paint(canvas, Offset(size.x / 2 - textPainter.width / 2, size.y / 2 - textPainter.height / 2));
+    }
   }
 }

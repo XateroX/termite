@@ -30,7 +30,7 @@ class TermiteGame extends FlameGame
 
   double get width => size.x;
   double get height => size.y;
-  HexGrid hexGrid = HexGrid(5, 5);
+  HexGrid hexGrid = HexGrid(25, 25);
   List<Entity> entities = [];
   late Queen? queen;
   Rect? previousVisibleRect;
@@ -39,6 +39,8 @@ class TermiteGame extends FlameGame
   bool moveUp = false;
   bool moveRight = false;
   bool moveDown = false;
+
+  bool debug = true;
 
   // Set to keep track of visible tiles
   Set<HexTile> visibleTiles = {};
@@ -101,9 +103,18 @@ class TermiteGame extends FlameGame
       return false;
     });
 
+    // Remove tiles that are no longer visible
+    visibleQueens.removeWhere((queen) {
+      if (!extendedRect.overlaps(queen.toRect())) {
+        queen.removeFromParent();
+        return true;
+      }
+      return false;
+    });
+
     // Add tiles that are now visible
     for (final hex in hexGrid.grid) {
-      Vector2 position = calculateHexPosition(hex.q, hex.r);
+      Vector2 position = calculateHexCenterPosition(hex.q, hex.r);
       final tileRect = Rect.fromLTWH(
         position.x,
         position.y,
@@ -119,9 +130,12 @@ class TermiteGame extends FlameGame
       }
     }
 
+    // Generate new hexes if there are empty spaces
+    generateNewHexes(extendedRect);
+
     // Add entities that are now visible
     for (Entity entity in entities) {
-      Vector2 position = calculateHexPosition(entity.currentHex.q, entity.currentHex.r);
+      Vector2 position = calculateHexCenterPosition(entity.currentHex.q, entity.currentHex.r);
       final entityRect = Rect.fromLTWH(
         position.x,
         position.y,
@@ -146,15 +160,53 @@ class TermiteGame extends FlameGame
     }
   }
 
+  void generateNewHexes(Rect extendedRect) {
+    // Define the range of q and r values to check
+    final int minQ = (extendedRect.left / (hexTileSize/2)).floor();
+    final int maxQ = (extendedRect.right / (hexTileSize/2)).ceil();
+    final int minR = (extendedRect.top / ((3 / 4) * hexTileSize)).floor();
+    final int maxR = (extendedRect.bottom / ((3 / 4) * hexTileSize)).ceil();
+
+    for (int q = minQ; q <= maxQ; q++) {
+      for (int r = minR; r <= maxR; r++) {
+        if (!hexGrid.grid.any((hex) => hex.q == q && hex.r == r)) {
+          // Generate a new hex and add it to the grid
+          final newHex = Hex(hexGrid, q, r);
+          hexGrid.grid.add(newHex);
+
+          // Add the new hex to the visible tiles if it overlaps with the extendedRect
+          Vector2 position = calculateHexCenterPosition(q, r);
+          final tileRect = Rect.fromLTWH(
+            position.x,
+            position.y,
+            hexTileSize,
+            hexTileSize,
+          );
+
+          if (extendedRect.overlaps(tileRect)) {
+            final tile = HexTile(newHex);
+            world.add(tile);
+            visibleTiles.add(tile);
+          }
+        }
+      }
+    }
+  }
+
   void addEntity(Entity entity) {
     entities.add(entity);
   }
 
   bool containsMite(int q, int r) {
-    var mites = entities.where((entity) => entity.runtimeType == Termite);
-    for (int i=0; i<mites.length;) {
-      if ((mites.elementAt(i) as Termite).currentHex.q == q && (mites.elementAt(i) as Termite).currentHex.r == r) {
+    var mites = [];
+    mites.addAll(entities);
+    mites.removeWhere((entity) => entity.runtimeType != Termite);
+    for (int i=0; i<mites.length; i++) {
+      var some_mite = (mites.elementAt(i) as Termite);
+      if (some_mite.currentHex.q == q && some_mite.currentHex.r == r) {
         return true;
+      }else{
+        continue;
       }
     }
     return false;
@@ -164,10 +216,6 @@ class TermiteGame extends FlameGame
   void update(double dt) {
     super.update(dt);
     final visibleRect = camera.visibleWorldRect;
-    // if (previousVisibleRect == null || !previousVisibleRect!.overlaps(visibleRect)) {
-    //   addVisibleTiles();
-    //   previousVisibleRect = visibleRect;
-    // }
     addVisibleComponents();
 
     if (moveLeft) {
@@ -191,13 +239,19 @@ class TermiteGame extends FlameGame
     super.onKeyEvent(event, keysPressed);
     final isKeyDown = event is KeyDownEvent;
 
+    
     if (isKeyDown) {
       this.keysPressed.add(event.logicalKey);
-      print(event.logicalKey.toString() + ' pressed');
+      if (debug){
+        // print(event.logicalKey.toString() + ' pressed');
+      }
     } else {
       this.keysPressed.remove(event.logicalKey);
-      print(event.logicalKey.toString() + ' released');
+      if (debug){
+        // print(event.logicalKey.toString() + ' released');
+      }
     }
+    
 
     moveLeft = this.keysPressed.contains(LogicalKeyboardKey.arrowLeft);
     moveUp = this.keysPressed.contains(LogicalKeyboardKey.arrowUp);

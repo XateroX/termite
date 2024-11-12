@@ -13,7 +13,7 @@ class Hex {
     List<Hex?> adjacentTiles = [];
     adjacentTiles.add(parentHexGrid.getTile(q + 1, r));
     adjacentTiles.add(parentHexGrid.getTile(q - 1, r));
-    adjacentTiles.add(parentHexGrid.getTile(q + 1, r + 1));
+    adjacentTiles.add(parentHexGrid.getTile(q - 1, r - 1));
     adjacentTiles.add(parentHexGrid.getTile(q - 1, r + 1));
     adjacentTiles.add(parentHexGrid.getTile(q, r + 1));
     adjacentTiles.add(parentHexGrid.getTile(q, r - 1));
