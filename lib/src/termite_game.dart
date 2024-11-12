@@ -6,12 +6,21 @@ import 'package:flame/events.dart';
 import 'package:flame/game.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:termite/src/widgets/hex_constructor.dart';
+import 'package:termite/src/abstract_clases/Entity.dart';
+import 'package:termite/src/components/hex_tile.dart';
+import 'package:termite/src/game_data_structures/hex.dart';
+import 'package:termite/src/game_data_structures/queen.dart';
+import 'package:termite/src/game_data_structures/termite.dart';
+import 'package:termite/src/utils/calculations.dart';
 
 import 'components/components.dart';
+
+import 'game_data_structures/hex_grid.dart';
+
 import 'config.dart';
 
-class TermiteGame extends FlameGame with HasCollisionDetection, KeyboardEvents, TapDetector {
+class TermiteGame extends FlameGame
+    with HasCollisionDetection, KeyboardEvents, TapDetector {
   TermiteGame()
       : super(
           camera: CameraComponent(),
@@ -20,12 +29,16 @@ class TermiteGame extends FlameGame with HasCollisionDetection, KeyboardEvents, 
   double get width => size.x;
   double get height => size.y;
   HexGrid hexGrid = HexGrid(100, 100);
+  late Queen? queen;
   Rect? previousVisibleRect;
 
   bool moveLeft = false;
   bool moveUp = false;
   bool moveRight = false;
   bool moveDown = false;
+
+  // Set to keep track of visible tiles
+  Set<HexTile> visibleTiles = {};
 
   Set<LogicalKeyboardKey> keysPressed = {};
 
@@ -46,33 +59,65 @@ class TermiteGame extends FlameGame with HasCollisionDetection, KeyboardEvents, 
 
     camera.viewfinder.anchor = Anchor.topLeft;
     // Initialize the debug text component
-    debugText = TextComponent(
-      text: '',
-      textRenderer: TextPaint(
-        style: const TextStyle(
-          color: Colors.white,
-          fontSize: 12,
-        ),
-      ),
-      position: Vector2(10, 10), // Position it at the top-left corner
-    );
-    add(debugText);
+    // debugText = TextComponent(
+    //   text: '',
+    //   textRenderer: TextPaint(
+    //     style: const TextStyle(
+    //       color: Colors.white,
+    //       fontSize: 12,
+    //     ),
+    //   ),
+    //   position: Vector2(10, 10), // Position it at the top-left corner
+    // );
+    // add(debugText);
     // debugMode = true;
+
+    Hex queenhex = hexGrid.getRandomHex();
+
+    // make new queen
+    queen = Queen(this, queenhex);
+    queenhex.addEntity(queen!);
+
+    this.overlays.add('debugTools');
   }
 
   void addVisibleTiles() {
-    final buffer = 100.0; // Buffer to render tiles outside the camera view
+    final buffer = 200.0; // Buffer to render tiles outside the camera view
     final extendedRect = camera.visibleWorldRect.inflate(buffer);
 
-    world.children.whereType<HexTile>().forEach((tile) {
+    // Remove tiles that are no longer visible
+    visibleTiles.removeWhere((tile) {
       if (!extendedRect.overlaps(tile.toRect())) {
         tile.removeFromParent();
+        return true;
       }
+      return false;
     });
 
-    for (final tile in hexGrid.grid) {
-      if (extendedRect.overlaps(tile.toRect()) && !world.children.contains(tile)) {
+    // Add tiles that are now visible
+    for (final hex in hexGrid.grid) {
+      Vector2 position = calculateHexPosition(hex.q, hex.r);
+      final tileRect = Rect.fromLTWH(
+        position.x,
+        position.y,
+        hexTileSize,
+        hexTileSize,
+      );
+
+      if (extendedRect.overlaps(tileRect) &&
+          !visibleTiles.any((tile) => tile.hex == hex)) {
+        final tile = HexTile(hex);
         world.add(tile);
+        visibleTiles.add(tile);
+
+        // refactor this so that the entities are part of a seperate array not part of the tiles
+        // add all the entities in the hex to the world (convert them to their components)
+        for (Entity entity in hex.entityList) {
+          if (entity.runtimeType is Termite) {
+            final termite = classComponents[Termite]!(entity);
+            world.add(termite);
+          }
+        }
       }
     }
   }
@@ -93,7 +138,14 @@ class TermiteGame extends FlameGame with HasCollisionDetection, KeyboardEvents, 
     if (moveUp) {
       camera.moveBy(Vector2(0, -500 * dt), speed: 500);
     }
-    debugText.text = 'moveRight'+moveRight.toString()+' moveLeft'+moveLeft.toString()+' moveUp'+moveUp.toString()+' moveDown'+moveDown.toString();
+    debugText.text = 'moveRight' +
+        moveRight.toString() +
+        ' moveLeft' +
+        moveLeft.toString() +
+        ' moveUp' +
+        moveUp.toString() +
+        ' moveDown' +
+        moveDown.toString();
     if (moveRight) {
       camera.moveBy(Vector2(500 * dt, 0), speed: 500);
     }
@@ -104,7 +156,8 @@ class TermiteGame extends FlameGame with HasCollisionDetection, KeyboardEvents, 
 
   // Keyboard events to pan the camera
   @override
-  KeyEventResult onKeyEvent(KeyEvent event, Set<LogicalKeyboardKey> keysPressed) {
+  KeyEventResult onKeyEvent(
+      KeyEvent event, Set<LogicalKeyboardKey> keysPressed) {
     super.onKeyEvent(event, keysPressed);
     final isKeyDown = event is KeyDownEvent;
 

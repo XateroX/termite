@@ -1,15 +1,27 @@
-
 import 'package:flame/components.dart';
 import 'package:flame/game.dart';
 import 'package:flutter/material.dart';
-import 'package:termite/src/termite_game.dart';
+import 'package:termite/src/abstract_clases/Entity.dart';
+import 'package:termite/src/game_data_structures/hex_grid.dart';
+import 'package:termite/src/game_data_structures/termite.dart';
+import 'package:termite/src/utils/calculations.dart';
+
+import '../game_data_structures/hex.dart';
 
 import '../config.dart';
 
 class HexTile extends PositionComponent {
-  HexTile(Vector2 position) {
-    this.position = position;
-    size = Vector2.all(hexTileSize);
+  List<Entity> entityList = [];
+  late final int q;
+  late final int r;
+  Hex hex;
+
+  HexTile(this.hex) {
+    // calculate pixel position from hex and hexTileSize
+    q = hex.q;
+    r = hex.r;
+    position = calculateHexPosition(q, r);
+    size = Vector2(hexTileSize.toDouble(), hexTileSize.toDouble());
   }
 
   @override
@@ -31,26 +43,5 @@ class HexTile extends PositionComponent {
       ..style = PaintingStyle.stroke
       ..strokeWidth = 2.0;
     canvas.drawPath(path, outlinePaint);
-  }
-}
-
-
-class HexGrid {
-  List<HexTile> grid = [];
-
-/*
-  Generate a HexGrid with the given number of columns and rows and 
-  potentially with a starting HexGrid to re-generate the grid within. 
-*/
-  HexGrid(columns, rows) {
-    _generateGrid(columns, rows);
-  }
-
-  void _generateGrid(int columns, int rows) {
-    for (int i = 0; i < columns; i++) {
-      for (var j = 0; j < rows; j++) {
-        grid.add(HexTile(Vector2(i * hexTileSize + (j%2) * hexTileSize/2, (j*(3/4)) * hexTileSize)));
-      }
-    }
   }
 }
