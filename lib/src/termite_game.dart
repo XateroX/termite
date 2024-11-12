@@ -8,6 +8,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:termite/src/abstract_clases/Entity.dart';
 import 'package:termite/src/components/hex_tile.dart';
+import 'package:termite/src/components/queen.dart';
+import 'package:termite/src/components/termite.dart';
 import 'package:termite/src/game_data_structures/hex.dart';
 import 'package:termite/src/game_data_structures/queen.dart';
 import 'package:termite/src/game_data_structures/termite.dart';
@@ -28,7 +30,8 @@ class TermiteGame extends FlameGame
 
   double get width => size.x;
   double get height => size.y;
-  HexGrid hexGrid = HexGrid(100, 100);
+  HexGrid hexGrid = HexGrid(5, 5);
+  List<Entity> entities = [];
   late Queen? queen;
   Rect? previousVisibleRect;
 
@@ -40,18 +43,13 @@ class TermiteGame extends FlameGame
   // Set to keep track of visible tiles
   Set<HexTile> visibleTiles = {};
 
-  Set<LogicalKeyboardKey> keysPressed = {};
+  // Set to keep track of visible termites
+  Set<TermiteComponent> visibleTermites = {};
 
-  late TextComponent debugText = TextComponent(
-    text: 'Test',
-    textRenderer: TextPaint(
-      style: const TextStyle(
-        color: Colors.white,
-        fontSize: 12,
-      ),
-    ),
-    position: Vector2(100, 100),
-  );
+  // Set to keep track of visible termites
+  Set<QueenComponent> visibleQueens = {};
+
+  Set<LogicalKeyboardKey> keysPressed = {};
 
   @override
   FutureOr<void> onLoad() async {
@@ -76,12 +74,12 @@ class TermiteGame extends FlameGame
 
     // make new queen
     queen = Queen(this, queenhex);
-    queenhex.addEntity(queen!);
+    addEntity(queen!);
 
     this.overlays.add('debugTools');
   }
 
-  void addVisibleTiles() {
+  void addVisibleComponents() {
     final buffer = 200.0; // Buffer to render tiles outside the camera view
     final extendedRect = camera.visibleWorldRect.inflate(buffer);
 
@@ -89,6 +87,15 @@ class TermiteGame extends FlameGame
     visibleTiles.removeWhere((tile) {
       if (!extendedRect.overlaps(tile.toRect())) {
         tile.removeFromParent();
+        return true;
+      }
+      return false;
+    });
+
+    // Remove tiles that are no longer visible
+    visibleTermites.removeWhere((mite) {
+      if (!extendedRect.overlaps(mite.toRect())) {
+        mite.removeFromParent();
         return true;
       }
       return false;
@@ -109,17 +116,48 @@ class TermiteGame extends FlameGame
         final tile = HexTile(hex);
         world.add(tile);
         visibleTiles.add(tile);
-
-        // refactor this so that the entities are part of a seperate array not part of the tiles
-        // add all the entities in the hex to the world (convert them to their components)
-        for (Entity entity in hex.entityList) {
-          if (entity.runtimeType is Termite) {
-            final termite = classComponents[Termite]!(entity);
-            world.add(termite);
-          }
-        }
       }
     }
+
+    // Add entities that are now visible
+    for (Entity entity in entities) {
+      Vector2 position = calculateHexPosition(entity.currentHex.q, entity.currentHex.r);
+      final entityRect = Rect.fromLTWH(
+        position.x,
+        position.y,
+        hexTileSize,
+        hexTileSize,
+      );
+      if (entity is Termite){
+          if (extendedRect.overlaps(entityRect) &&
+              !visibleTermites.any((mite) => mite.termite == entity)) {
+            final TermiteComponent termiteComponent = EntityComponentMappings.getTermiteComponent(entity as Termite);
+            world.add(termiteComponent);
+            visibleTermites.add(termiteComponent);
+          }
+      } else if (entity is Queen){
+          if (extendedRect.overlaps(entityRect) &&
+              !visibleQueens.any((queen) => queen.queen == entity)) {
+            final QueenComponent queenComponent = EntityComponentMappings.getQueenComponent(entity as Queen);
+            world.add(queenComponent);
+            visibleQueens.add(queenComponent);
+          }
+      }
+    }
+  }
+
+  void addEntity(Entity entity) {
+    entities.add(entity);
+  }
+
+  bool containsMite(int q, int r) {
+    var mites = entities.where((entity) => entity.runtimeType == Termite);
+    for (int i=0; i<mites.length;) {
+      if ((mites.elementAt(i) as Termite).currentHex.q == q && (mites.elementAt(i) as Termite).currentHex.r == r) {
+        return true;
+      }
+    }
+    return false;
   }
 
   @override
@@ -130,7 +168,7 @@ class TermiteGame extends FlameGame
     //   addVisibleTiles();
     //   previousVisibleRect = visibleRect;
     // }
-    addVisibleTiles();
+    addVisibleComponents();
 
     if (moveLeft) {
       camera.moveBy(Vector2(-500 * dt, 0), speed: 500);
@@ -138,14 +176,6 @@ class TermiteGame extends FlameGame
     if (moveUp) {
       camera.moveBy(Vector2(0, -500 * dt), speed: 500);
     }
-    debugText.text = 'moveRight' +
-        moveRight.toString() +
-        ' moveLeft' +
-        moveLeft.toString() +
-        ' moveUp' +
-        moveUp.toString() +
-        ' moveDown' +
-        moveDown.toString();
     if (moveRight) {
       camera.moveBy(Vector2(500 * dt, 0), speed: 500);
     }

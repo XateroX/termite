@@ -28,7 +28,7 @@ class DebugTooling extends StatelessWidget {
             if (isOpen)
               Container(
                 width: gameWidth / 3,
-                color: Colors.white,
+                color: Colors.transparent,
                 child: Column(
                   children: [DebugButtonAddMite(game)],
                 ),

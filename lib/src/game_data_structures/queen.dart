@@ -10,19 +10,17 @@ import 'termite.dart';
 
 class Queen extends Entity {
   TermiteGame game;
-  Hex myTile;
 
-  Queen(this.game, this.myTile);
+  Queen(this.game, Hex currentHex) : super(currentHex);
 
   bool generateMite() {
     try {
-      var newTermite = Termite();
-
       // get all the adjacent tiles and see if any have space for the mite
-      List<Hex> adjTiles = myTile.neighbors();
+      List<Hex> adjTiles = currentHex.neighbors();
       for (Hex tile in adjTiles) {
-        if (!tile.containsMite()) {
-          tile.addEntity(newTermite);
+        if (!game.containsMite(tile.q, tile.r)) {
+          var newTermite = Termite(tile);
+          game.addEntity(newTermite);
           break;
         }
       }

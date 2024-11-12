@@ -9,3 +9,10 @@ Vector2 calculateHexPosition(int column, int row) {
     (row * (3 / 4) * hexTileSize).toDouble(),
   );
 }
+
+Vector2 calculateHexCenterPosition(int column, int row) {
+  return Vector2(
+    (column * hexTileSize + (row % 2) * hexTileSize / 2 - hexTileSize / 2).toDouble(),
+    (row * (3 / 4) * hexTileSize + hexTileSize / 2).toDouble(),
+  );
+}

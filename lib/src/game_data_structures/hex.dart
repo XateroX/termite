@@ -5,7 +5,6 @@ class Hex {
   final parentHexGrid;
   final int q;
   final int r;
-  List<Entity> entityList = [];
 
   Hex(this.parentHexGrid, this.q, this.r);
 
@@ -20,25 +19,6 @@ class Hex {
     adjacentTiles.add(parentHexGrid.getTile(q, r - 1));
 
     return adjacentTiles.whereType<Hex>().toList();
-  }
-
-  bool addEntity(Entity entity) {
-    try {
-      entityList.add(entity);
-    } catch (e) {
-      print(
-          "Error adding Entity of type ${entity.runtimeType} in Hex $q $r: ${e.toString()}");
-      return false;
-    }
-    return true;
-  }
-
-  bool containsMite() {
-    if (entityList.any((entity) => entity.runtimeType == Termite)) {
-      return true;
-    } else {
-      return false;
-    }
   }
 
   @override

@@ -1,13 +1,27 @@
+import 'dart:ui';
+
+import 'package:flame/collisions.dart';
 import 'package:flame/components.dart';
+import 'package:termite/src/abstract_clases/Entity.dart';
+import 'package:termite/src/config.dart';
+import 'package:termite/src/game_data_structures/hex.dart';
 import 'package:termite/src/game_data_structures/termite.dart';
 
-class TermiteComponent extends PositionComponent {
+class TermiteComponent extends CircleComponent {
   Termite termite; 
-  TermiteComponent(this.termite) {
+  TermiteComponent({
+    required this.termite,
+    required super.position,
+    }) : super(
+            radius: hexTileSize/3,
+            anchor: Anchor.center,
+            paint: Paint()
+              ..color = const Color.fromARGB(255, 255, 0, 0)
+              ..style = PaintingStyle.fill,
+            children: [CircleHitbox()]);      
     // this is the constructor
-  }
 
-  TermiteComponent fromTermiteEntity(Termite entity){
-    return TermiteComponent()
+  static TermiteComponent fromTermiteEntity(Termite entity){
+    return TermiteComponent(termite: entity, position: entity.position);
   }
 }

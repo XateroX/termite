@@ -1,12 +1,15 @@
 import 'dart:math';
 
+import 'package:flame/game.dart';
 import 'package:termite/src/abstract_clases/Entity.dart';
+import 'package:termite/src/game_data_structures/hex.dart';
+import 'package:termite/src/utils/calculations.dart';
 
 class Termite extends Entity {
   late String name;
   final Random random = Random();
 
-  Termite() {
+  Termite(super.currentHex) {
     // list of random philosophical names
     final names = [
       'Aristotle',
