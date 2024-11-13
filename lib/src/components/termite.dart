@@ -31,14 +31,13 @@ class TermiteComponent extends PositionComponent with HasGameReference<TermiteGa
         Vector2 newPosition = generateNewLegPosition(i);
 
         // initially set the leg position at the target
-        Vector2 relativePosition = newPosition - position;
-        legPerfectPositions.add(relativePosition);
+        legPerfectPositions.add(generateNewLegPosition(i, withPosition: false));
         legTargetPositions.add(newPosition);
         legPositions.add(newPosition);
       }
     }
   
-  Vector2 generateNewLegPosition(int legInd){
+  Vector2 generateNewLegPosition(int legInd, {bool withPosition=true}){
     // get the angle of the velocity vector
     double velocityAngle = atan2(velocity.y, velocity.x);
 
@@ -73,9 +72,12 @@ class TermiteComponent extends PositionComponent with HasGameReference<TermiteGa
     // x += rightAngleDirection.x * 5;
     // y += rightAngleDirection.y * 5;
 
-    // add the current position to the leg position
-    x += position.x;
-    y += position.y;
+    if (withPosition){
+      // add the current position to the leg position
+      x += position.x;
+      y += position.y;
+    }
+    
 
     return Vector2(x, y);
   }
@@ -106,9 +108,9 @@ class TermiteComponent extends PositionComponent with HasGameReference<TermiteGa
       bool firstHalf = legPositions.indexOf(legPosition) < (legPositions.length/2).ceil();
       double angle;
       if (firstHalf) {
-        angle = -20 * 3.14159 / 180;
+        angle = -15 * 3.14159 / 180;
       } else {
-        angle = 20 * 3.14159 / 180;
+        angle = 15 * 3.14159 / 180;
       }
       
       double x = middlePoint.x - position.x;
@@ -148,14 +150,16 @@ class TermiteComponent extends PositionComponent with HasGameReference<TermiteGa
 
     // draw line in direction of velocity
     // get the angle of the velocity vector
-    Paint velocityArrowPaint = Paint()
+    if (game.debug){
+      Paint velocityArrowPaint = Paint()
       ..color = const Color.fromARGB(255, 255, 0, 0)
       ..style = PaintingStyle.stroke;
-    velocityArrowPaint.strokeWidth = 2;
-    double velocityAngle = atan2(velocity.y, velocity.x);
-    double x = hexTileSize / 2 * 0.6 * cos(velocityAngle);
-    double y = hexTileSize / 2 * 0.6 * sin(velocityAngle);
-    canvas.drawLine(Offset.zero, Offset(x, y), velocityArrowPaint);
+      velocityArrowPaint.strokeWidth = 2;
+      double velocityAngle = atan2(velocity.y, velocity.x);
+      double x = hexTileSize / 2 * 0.6 * cos(velocityAngle);
+      double y = hexTileSize / 2 * 0.6 * sin(velocityAngle);
+      canvas.drawLine(Offset.zero, Offset(x, y), velocityArrowPaint);
+    }
   }
 
   @override
@@ -173,7 +177,7 @@ class TermiteComponent extends PositionComponent with HasGameReference<TermiteGa
       legPerfectPositionRelative = legPerfectPositionRelative + position;
 
       double distance = legTargetPosition.distanceTo(legPerfectPositionRelative);
-      if (distance > legMaxExtent/(1.5+i*legMaxExtent*0.01)){
+      if (distance > legMaxExtent/(1.1+i*legMaxExtent*0.01)){
         legTargetPositions[i] = generateNewLegPosition(i);
       }
     }

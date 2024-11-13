@@ -28,7 +28,7 @@ class HexTile extends PositionComponent with HasGameReference<TermiteGame>{
   @override
   void render(Canvas canvas) {
     super.render(canvas);
-    final paint = Paint()..color = Color.fromARGB(255, 0, 0, 0);
+    final paint = Paint()..color = Color.fromARGB(255, 39, 39, 39);
     final path = Path()
       ..moveTo(size.x / 2, 0)
       ..lineTo(size.x, size.y / 4)
@@ -40,7 +40,7 @@ class HexTile extends PositionComponent with HasGameReference<TermiteGame>{
     canvas.drawPath(path, paint);
 
     final outlinePaint = Paint()
-      ..color = Color.fromARGB(255, 0, 0, 255)
+      ..color = Color.fromARGB(175, 255, 255, 255)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 2.0;
     canvas.drawPath(path, outlinePaint);

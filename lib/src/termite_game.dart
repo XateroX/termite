@@ -40,7 +40,7 @@ class TermiteGame extends FlameGame
   bool moveRight = false;
   bool moveDown = false;
 
-  bool debug = true;
+  bool debug = false;
 
   // Set to keep track of visible tiles
   Set<HexTile> visibleTiles = {};
